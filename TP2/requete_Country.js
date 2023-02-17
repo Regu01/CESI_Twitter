@@ -1,0 +1,31 @@
+// Définition des constantes
+const MongoClient = require('mongodb').MongoClient;
+const config = require('../config.json');
+const urlConnexion = config.tokenMongo;
+
+// Définition des constantes
+const DB_NAME = 'Cesi_Twitter'; // Nom de la base de données
+const COLLECTION_NAME = 'students'; // Nom de la collection
+
+// Connexion à la base de données MongoDB Atlas
+MongoClient.connect(urlConnexion, function(err, client) {
+    if (err) throw err;
+
+    const db = client.db(DB_NAME);
+    const collection = db.collection(COLLECTION_NAME);
+
+    // Requête pour compter le nombre d'étudiants par pays et trier les pays par ordre décroissant
+    collection.aggregate([
+        { $group: { _id: '$country', count: { $sum: 1 } } },
+        { $sort: { count: -1 } }
+    ]).toArray(function(err, result) {
+        if (err) throw err;
+
+        console.log('Nombre d\'étudiants par pays :');
+        result.forEach(function(doc) {
+            console.log(`${doc._id} : ${doc.count}`);
+        });
+
+        client.close();
+    });
+});
